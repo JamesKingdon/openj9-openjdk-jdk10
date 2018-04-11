@@ -1,0 +1,29 @@
+sudo: required
+language: cpp
+services: docker
+install:
+- bash ./get_source.sh
+- cd ..; wget https://github.com/AdoptOpenJDK/openjdk10-openj9-nightly/releases/download/jdk-10%2B46-20181004/OpenJDK10-OPENJ9_x64_Linux_20181004.tar.gz;
+  tar xf OpenJDK10-OPENJ9_x64_Linux_20181004.tar.gz
+- cd openj9-openjdk-jdk10/openj9/buildenv/docker/jdk10/armhf_CC/arm-linux-gnueabihf;
+  docker build -t openj9arm .
+script:
+- docker run -v ${TRAVIS_BUILD_DIR}:/root/openj9-openjdk-jdk10 -v ${TRAVIS_BUILD_DIR%/openj9-openjdk-jdk10}/jdk-10+46:/root/buildjdk
+  -t openj9arm /bin/sh -c "cd openj9-openjdk-jdk10 && ./build-docker-arm"
+before_deploy:
+- git config --local user.name "James Kingdon"
+- git config --local user.email "jkingdon@ca.ibm.com"
+- git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
+deploy:
+  provider: releases
+  api_key:
+    secure: dL6sYerp5Jl1DsgMu3Wy1UiqBrBjMM/hnkPdU6p843lAJ0AWVB/Gb3eLwUxnqpDIfoYTYzoWe+6+v5Wat16YZatpQndYK8O82C6FN1KT9S58KCAAp+L4qH34ZH9GjasjkUYdHEkX69ewDbuReu6Qdn5qLPubZEOsOI9YrHDvIYIoRQUtE9xlx03K6s2BqYpK7Kv+lirdoAhoklRCzL9Z8Sx+bZORlYCg8a+r72t26/aZJ1mif5wIAPH+KV+I67CB17XS1fHfUK6DGhHtjdIUEX+XADzxFnbG00vXGBZYrZXGKytIjN5vC9zSuwDMzC5anEIQ5KNaVWJDUpFy7BbJVtG4kPYsiCODX9CU1SXcxtRpRB3sd44nlhqZ5YpsZBqx71TaPvZeanw0Cym7dz6BWY1wBTas9NHhE0XT5vROVHSrUneu/RO8ySvoVsyVGf31QQ6xcMcHxeO7xewlbbe8ID04LTNR1Vg+E0w9F0xLncBCfCnaUbYRFHAo1f/4zYo4l682QHvnMBQCIMdACNrwUNY6ubANcbgBXbR5kzr40ViENX0h7LvAzCZt5bwH+wYBQN8/O7ut0raYJCxAggft09Imt/Y0zikR0VqHpFDjPo5LRQYWKTbM3xdpr7sQ/ydTf7DjGRy/hm9WLxwtCh5+34Z/cOQpWmxkaM8kPXKuR4A=
+  file:
+   - ${TRAVIS_BUILD_DIR}/build/linux-arm-normal-server-release/images/jdk.zip
+   - ${TRAVIS_BUILD_DIR}/build/linux-arm-normal-server-release/images/jre.zip
+  on:
+    repo: JamesKingdon/openj9-openjdk-jdk10
+    branch: arm
+  prerelease: true
+  name: Testing, pre-alpha build for armhf (built for armV6)
+  body: This is a prototype build with known problems, intended for testing and further development. To work around the currently known problems, invoke the JVM with -Xjit:disableDirectToJNI
