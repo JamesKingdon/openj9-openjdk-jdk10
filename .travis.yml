@@ -26,4 +26,4 @@ deploy:
     branch: arm
   prerelease: true
   name: Testing, pre-alpha build for armhf (built for armV6)
-  body: This is a prototype build with known problems, intended for testing and further development. To work around the currently known problems, invoke the JVM with -Xjit:disableDirectToJNI
+  body: This is a prototype build with known problems, intended for testing and further development. If running under a 64 bit OS don't use AOT (OpenJ9 issues 1205).
